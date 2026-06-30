@@ -1,6 +1,6 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
-import { getGlobalData } from '@/lib/db/getSiteData'
+import { fetchGlobalAllData } from '@/lib/db/SiteDataApi'
 import { DynamicLayout } from '@/themes/theme'
 
 /**
@@ -15,7 +15,7 @@ const Tag = props => {
 
 export async function getStaticProps({ params: { tag }, locale }) {
   const from = 'tag-props'
-  const props = await getGlobalData({ from, locale })
+  const props = await fetchGlobalAllData({ from, locale })
 
   // 过滤状态
   props.posts = props.allPages
@@ -26,9 +26,14 @@ export async function getStaticProps({ params: { tag }, locale }) {
   props.postCount = props.posts.length
 
   // 处理分页
-  if (siteConfig('POST_LIST_STYLE') === 'scroll') {
+  const POST_LIST_STYLE = siteConfig(
+    'POST_LIST_STYLE',
+    'page',
+    props?.NOTION_CONFIG
+  )
+  if (POST_LIST_STYLE === 'scroll') {
     // 滚动列表 给前端返回所有数据
-  } else if (siteConfig('POST_LIST_STYLE') === 'page') {
+  } else if (POST_LIST_STYLE === 'page') {
     props.posts = props.posts?.slice(
       0,
       siteConfig('POSTS_PER_PAGE', 12, props?.NOTION_CONFIG)
@@ -64,7 +69,7 @@ function getTagNames(tags) {
 
 export async function getStaticPaths() {
   const from = 'tag-static-path'
-  const { tagOptions } = await getGlobalData({ from })
+  const { tagOptions } = await fetchGlobalAllData({ from })
   const tagNames = getTagNames(tagOptions)
 
   return {

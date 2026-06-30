@@ -67,6 +67,24 @@
   --notion-header-height: 45px;
 }
 
+/* Dark mode: override Notion CSS variables so tags, mentions, etc. are readable */
+html.dark {
+  --fg-color: rgba(255, 255, 255, 0.9) !important;
+  --fg-color-0: rgba(255, 255, 255, 0.09);
+  --fg-color-1: rgba(255, 255, 255, 0.16);
+  --fg-color-2: rgba(255, 255, 255, 0.4);
+  --fg-color-3: rgba(255, 255, 255, 0.6);
+  --fg-color-4: #fff;
+  --fg-color-5: rgba(255, 255, 255, 0.024);
+  --fg-color-6: rgba(255, 255, 255, 0.8);
+  --fg-color-icon: var(--fg-color);
+
+  --bg-color: #191919;
+  --bg-color-0: rgba(200, 200, 200, 0.15);
+  --bg-color-1: rgb(30, 30, 30);
+  --bg-color-2: rgba(200, 200, 200, 0.15);
+}
+
 .notion {
   font-size: 16px;
   line-height: 1.5;
@@ -387,6 +405,32 @@
 
 summary > .notion-h {
   display: inline;
+}
+
+.notion details {
+  width: 100%;
+  padding: 3px 2px;
+}
+
+.notion details > summary {
+  cursor: pointer;
+  outline: none;
+  font-size: 1em;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notion details > summary::marker {
+  font-size: 0.8em;
+}
+
+.notion details > summary::-webkit-details-marker {
+  font-size: 0.8em;
+}
+
+.notion details > :not(summary) {
+  margin-left: 1.1em;
 }
 
 .notion-h {
@@ -1985,6 +2029,34 @@ svg + .notion-page-title-text {
   /* color: var(--notion-gray); */
 }
 
+/* 深色模式下优化 quote / callout 对比度与层次 */
+html.dark .notion-quote {
+  border-left-color: #60a5fa !important;
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.22),
+    rgba(30, 64, 175, 0.14)
+  ) !important;
+  color: #dbeafe !important;
+}
+
+html.dark .notion-callout {
+  border: 1px solid rgba(129, 140, 248, 0.38) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.18),
+    rgba(30, 41, 59, 0.5)
+  ) !important;
+  color: #e2e8f0 !important;
+  border-radius: 10px;
+}
+
+html.dark .notion-callout .notion-callout-text,
+html.dark .notion-callout .notion-text {
+  color: #e2e8f0 !important;
+}
+
 /* .notion-asset-wrapper-pdf > div {
   width: unset !important;
 } */
@@ -2018,8 +2090,30 @@ tbody tr {
   display: none;
 }
 
-pre[class*='language-mermaid'] {
-  @apply bg-gray-50 dark:bg-gray-200 !important;
+.notion-collection-page-properties {
+  display: none !important;
+}
+
+/* Mermaid 外层 pre：与 html.dark 对齐，避免 Tailwind dark: 跟系统偏好不同步 */
+pre.notion-code.language-mermaid,
+pre.notion-code[class*='language-mermaid'] {
+  background-color: #f9fafb !important;
+}
+html.dark pre.notion-code.language-mermaid,
+html.dark pre.notion-code[class*='language-mermaid'] {
+  /* 深色页内用浅灰衬底，衬托 Mermaid 默认的深灰/黑连线（不改 mermaid JS） */
+  background-color: #e2e8f0 !important;
+}
+
+/* Mermaid：浅底图表区上 toolbar 易与背景糊在一起，浅/深色模式均在右上角加深色衬条（按钮为浅字） */
+html.light .code-toolbar:has(pre.language-mermaid) > .toolbar,
+html.light .code-toolbar:has(pre[class*='language-mermaid']) > .toolbar,
+html.dark .code-toolbar:has(pre.language-mermaid) > .toolbar,
+html.dark .code-toolbar:has(pre[class*='language-mermaid']) > .toolbar {
+  background-color: rgba(15, 15, 18, 0.98) !important;
+  border-bottom-left-radius: 12px;
+  padding: 6px 10px 8px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 /* mermaid 原文隐藏 */
@@ -2086,4 +2180,22 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
 /* 画廊左右边线不展示Bug */
 .notion-gallery {
   padding: 0 16px;
+}
+
+/* Dark mode: database property tags (select / multi_select) text readability */
+html.dark .notion-property-select-item,
+html.dark .notion-property-status-item,
+html.dark .notion-property-multi_select-item {
+  color: #fff !important;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode: link-mention text readability */
+html.dark .notion-link-mention-title,
+html.dark .notion-link-mention-provider {
+  color: var(--fg-color) !important;
+}
+
+html.dark .notion-link-mention-link {
+  color: inherit;
 }

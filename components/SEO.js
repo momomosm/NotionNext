@@ -22,23 +22,29 @@ const SEO = props => {
   const webFontUrl = siteConfig('FONT_URL')
 
   useEffect(() => {
-    // 使用WebFontLoader字体加载
-    loadExternalResource(
-      'https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js',
-      'js'
-    ).then(url => {
-      const WebFont = window?.WebFont
-      if (WebFont) {
-        // console.log('LoadWebFont', webFontUrl)
-        WebFont.load({
-          custom: {
-            // families: ['"LXGW WenKai"'],
-            urls: webFontUrl
-          }
-        })
-      }
-    })
-  }, [])
+    if (!webFontUrl) return
+
+    const timeoutId = window.setTimeout(() => {
+      // 使用WebFontLoader字体加载
+      loadExternalResource(
+        'https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js',
+        'js'
+      ).then(url => {
+        const WebFont = window?.WebFont
+        if (WebFont) {
+          // console.log('LoadWebFont', webFontUrl)
+          WebFont.load({
+            custom: {
+              // families: ['"LXGW WenKai"'],
+              urls: webFontUrl
+            }
+          })
+        }
+      })
+    }, 1500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [webFontUrl])
 
   // SEO关键词
   const KEYWORDS = siteConfig('KEYWORDS')
@@ -206,9 +212,6 @@ const SEO = props => {
       <link rel='dns-prefetch' href='//www.google-analytics.com' />
       <link rel='dns-prefetch' href='//www.googletagmanager.com' />
       <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='anonymous' />
-
-      {/* 预加载关键资源 */}
-      <link rel='preload' href='/fonts/inter-var.woff2' as='font' type='font/woff2' crossOrigin='anonymous' />
 
       {children}
     </Head>
