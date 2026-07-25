@@ -353,6 +353,160 @@ describe('Notion data format compatibility', () => {
     ])
   })
 
+  it('matches multi-select contains filters when values are comma-separated', () => {
+    const blockMap = {
+      block: {
+        tech_page: {
+          value: {
+            id: 'tech_page',
+            type: 'page',
+            properties: {
+              tags: [['Tech,Life']]
+            }
+          }
+        },
+        life_page: {
+          value: {
+            id: 'life_page',
+            type: 'page',
+            properties: {
+              tags: [['Life']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              tags: { name: 'Tags', type: 'multi_select' }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              page_sort: ['tech_page', 'life_page'],
+              format: {
+                collection_pointer: { id: 'collection_1' },
+                property_filters: [
+                  {
+                    filter: {
+                      property: 'tags',
+                      filter: {
+                        operator: 'multi_select_contains',
+                        value: { type: 'exact', value: 'Tech' }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['tech_page', 'life_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['tech_page'])
+    expect(blockMap.collection_view.view_1.value.value.page_sort).toEqual([
+      'tech_page'
+    ])
+  })
+
+  it('matches multi-select does-not-contain filters when values are comma-separated', () => {
+    const blockMap = {
+      block: {
+        tech_page: {
+          value: {
+            id: 'tech_page',
+            type: 'page',
+            properties: {
+              tags: [['Tech,Life']]
+            }
+          }
+        },
+        life_page: {
+          value: {
+            id: 'life_page',
+            type: 'page',
+            properties: {
+              tags: [['Life']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              tags: { name: 'Tags', type: 'multi_select' }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              page_sort: ['tech_page', 'life_page'],
+              format: {
+                collection_pointer: { id: 'collection_1' },
+                property_filters: [
+                  {
+                    filter: {
+                      property: 'tags',
+                      filter: {
+                        operator: 'multi_select_does_not_contain',
+                        value: { type: 'exact', value: 'Tech' }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['tech_page', 'life_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['life_page'])
+    expect(blockMap.collection_view.view_1.value.value.page_sort).toEqual([
+      'life_page'
+    ])
+  })
+
   it('normalizes reducerResults collection group data for gallery rendering', () => {
     const blockMap = {
       block: {
@@ -673,6 +827,362 @@ describe('Notion data format compatibility', () => {
     ).toEqual(['selected_page'])
   })
 
+  it('sorts embedded collection results from query2 text sorts', () => {
+    const blockMap = {
+      block: {
+        beta_page: {
+          value: {
+            id: 'beta_page',
+            type: 'page',
+            properties: {
+              slug: [['beta']]
+            }
+          }
+        },
+        alpha_page: {
+          value: {
+            id: 'alpha_page',
+            type: 'page',
+            properties: {
+              slug: [['alpha']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              slug: { name: 'Slug', type: 'text' }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              page_sort: ['beta_page', 'alpha_page'],
+              format: {
+                collection_pointer: { id: 'collection_1' }
+              },
+              query2: {
+                sort: [{ property: 'Slug', direction: 'ascending' }]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['beta_page', 'alpha_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['alpha_page', 'beta_page'])
+    expect(blockMap.collection_view.view_1.value.value.page_sort).toEqual([
+      'alpha_page',
+      'beta_page'
+    ])
+  })
+
+  it('sorts embedded collection results from query2 number sorts', () => {
+    const blockMap = {
+      block: {
+        low_page: {
+          value: {
+            id: 'low_page',
+            type: 'page',
+            properties: {
+              priority: [['1']]
+            }
+          }
+        },
+        high_page: {
+          value: {
+            id: 'high_page',
+            type: 'page',
+            properties: {
+              priority: [['9']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              priority: { name: 'Priority', type: 'number' }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              page_sort: ['low_page', 'high_page'],
+              format: {
+                collection_pointer: { id: 'collection_1' }
+              },
+              query2: {
+                sort: [{ property: 'priority', direction: 'descending' }]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['low_page', 'high_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['high_page', 'low_page'])
+    expect(blockMap.collection_view.view_1.value.value.page_sort).toEqual([
+      'high_page',
+      'low_page'
+    ])
+  })
+
+  it('sorts embedded collection results from query2 date sorts', () => {
+    const blockMap = {
+      block: {
+        later_page: {
+          value: {
+            id: 'later_page',
+            type: 'page',
+            properties: {
+              date: [['‣', [['d', { start_date: '2026-07-18' }]]]]
+            }
+          }
+        },
+        earlier_page: {
+          value: {
+            id: 'earlier_page',
+            type: 'page',
+            properties: {
+              date: [['‣', [['d', { start_date: '2026-07-01' }]]]]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              date: { name: 'Date', type: 'date' }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              page_sort: ['later_page', 'earlier_page'],
+              format: {
+                collection_pointer: { id: 'collection_1' }
+              },
+              query2: {
+                sort: [{ property: 'Date', direction: 'ascending' }]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['later_page', 'earlier_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['earlier_page', 'later_page'])
+    expect(blockMap.collection_view.view_1.value.value.page_sort).toEqual([
+      'earlier_page',
+      'later_page'
+    ])
+  })
+
+  it('sorts embedded collection date results by time on the same day', () => {
+    const blockMap = {
+      block: {
+        evening_page: {
+          value: {
+            id: 'evening_page',
+            type: 'page',
+            properties: {
+              date: [
+                ['‣', [['d', { start_date: '2026-07-18', start_time: '18:00' }]]]
+              ]
+            }
+          }
+        },
+        morning_page: {
+          value: {
+            id: 'morning_page',
+            type: 'page',
+            properties: {
+              date: [
+                ['‣', [['d', { start_date: '2026-07-18', start_time: '09:00' }]]]
+              ]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              date: { name: 'Date', type: 'date' }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              format: {
+                collection_pointer: { id: 'collection_1' }
+              },
+              query2: {
+                sort: [{ property: 'date', direction: 'ascending' }]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['evening_page', 'morning_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['morning_page', 'evening_page'])
+  })
+
+  it('sorts embedded collection results from query2 select sorts by option order', () => {
+    const blockMap = {
+      block: {
+        cherry_page: {
+          value: {
+            id: 'cherry_page',
+            type: 'page',
+            properties: {
+              category: [['樱桃']]
+            }
+          }
+        },
+        apple_page: {
+          value: {
+            id: 'apple_page',
+            type: 'page',
+            properties: {
+              category: [['苹果']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection_1: {
+          value: {
+            schema: {
+              category: {
+                name: 'Category',
+                type: 'select',
+                options: [
+                  { id: 'option_apple', name: '苹果', value: '苹果' },
+                  { id: 'option_cherry', name: '樱桃', value: '樱桃' }
+                ]
+              }
+            }
+          }
+        }
+      },
+      collection_view: {
+        view_1: {
+          value: {
+            value: {
+              id: 'view_1',
+              page_sort: ['cherry_page', 'apple_page'],
+              format: {
+                collection_pointer: { id: 'collection_1' }
+              },
+              query2: {
+                sort: [{ property: 'Category', direction: 'ascending' }]
+              }
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection_1: {
+          view_1: {
+            collection_group_results: {
+              blockIds: ['cherry_page', 'apple_page']
+            }
+          }
+        }
+      }
+    }
+
+    filterCollectionViewData(blockMap)
+
+    expect(
+      blockMap.collection_query.collection_1.view_1.collection_group_results
+        .blockIds
+    ).toEqual(['apple_page', 'cherry_page'])
+    expect(blockMap.collection_view.view_1.value.value.page_sort).toEqual([
+      'apple_page',
+      'cherry_page'
+    ])
+  })
+
   it('inherits sibling filters for embedded collection views without filters', () => {
     const blockMap = {
       block: {
@@ -839,11 +1349,11 @@ describe('Notion data format compatibility', () => {
     expect(normalizeNotionBlockType('heading_1')).toBe('header')
     expect(normalizeNotionBlockType('heading_2')).toBe('sub_header')
     expect(normalizeNotionBlockType('heading_3')).toBe('sub_sub_header')
-    expect(normalizeNotionBlockType('heading_4')).toBe('sub_sub_header')
-    expect(normalizeNotionBlockType('header_4')).toBe('sub_sub_header')
+    expect(normalizeNotionBlockType('heading_4')).toBe('header_4')
+    expect(normalizeNotionBlockType('header_4')).toBe('header_4')
   })
 
-  it('formats header_4 blocks into a renderable fallback heading type', () => {
+  it('keeps header_4 blocks as renderable fourth-level headings', () => {
     const formatted = formatNotionBlock({
       page_1: {
         value: {
@@ -856,7 +1366,7 @@ describe('Notion data format compatibility', () => {
       }
     })
 
-    expect(formatted.page_1.value.type).toBe('sub_sub_header')
+    expect(formatted.page_1.value.type).toBe('header_4')
   })
 
   it('builds a stable toc for newer heading block types', () => {
